@@ -1,4 +1,4 @@
-import { setAccessToken } from '../../../lib/tokenStore';
+import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -28,11 +28,15 @@ export async function GET(request) {
     const data = await response.json();
     
     if (data.access_token) {
-      setAccessToken(data.access_token);
-      return new Response(null, {
-        status: 302,
-        headers: { Location: '/' }
+      // Set the token in a cookie instead of memory
+      const response = NextResponse.redirect(new URL('/', request.url));
+      response.cookies.set('reddit_token', data.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 3600 // 1 hour
       });
+      return response;
     }
     
     return new Response('Authentication failed', { status: 400 });

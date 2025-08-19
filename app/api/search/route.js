@@ -1,7 +1,9 @@
-import { getAccessToken } from '../../../lib/tokenStore';
+import { cookies } from 'next/headers';
 
 export async function GET(request) {
-  const token = getAccessToken();
+  const cookieStore = cookies();
+  const token = cookieStore.get('reddit_token')?.value;
+  
   if (!token) {
     return new Response('Not authenticated', { status: 401 });
   }
@@ -22,6 +24,12 @@ export async function GET(request) {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Token is invalid, clear the cookie
+        const response = new Response('Token expired', { status: 401 });
+        response.cookies.set('reddit_token', '', { maxAge: 0 });
+        return response;
+      }
       throw new Error(`Reddit API error: ${response.status}`);
     }
 

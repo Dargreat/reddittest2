@@ -1,4 +1,4 @@
-import { getAccessToken } from '@/lib/tokenStore';
+import { getAccessToken } from '../../../lib/tokenStore';
 
 export async function GET(request) {
   const token = getAccessToken();
